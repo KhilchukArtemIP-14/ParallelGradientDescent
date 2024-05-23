@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34525.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GradientDescent", "GradientDescent\GradientDescent.csproj", "{94966418-BA07-48DC-8246-F0135F48F3A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GradientDescentBenchmarks", "GradientDescentBenchmarks\GradientDescentBenchmarks.csproj", "{10B15069-958D-4C89-870E-BCCEFC7076CB}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{94966418-BA07-48DC-8246-F0135F48F3A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94966418-BA07-48DC-8246-F0135F48F3A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94966418-BA07-48DC-8246-F0135F48F3A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94966418-BA07-48DC-8246-F0135F48F3A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10B15069-958D-4C89-870E-BCCEFC7076CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10B15069-958D-4C89-870E-BCCEFC7076CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10B15069-958D-4C89-870E-BCCEFC7076CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10B15069-958D-4C89-870E-BCCEFC7076CB}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {35E67C51-E192-4F1B-8A2A-3D28C8A1D815}
+	EndGlobalSection
+EndGlobal
