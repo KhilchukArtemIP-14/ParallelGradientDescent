@@ -1,5 +1,4 @@
-﻿using GradientDescent.LossFunctions;
-using Microsoft.Data.Analysis;
+﻿using Microsoft.Data.Analysis;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,39 +14,40 @@ namespace GradientDescent
         public decimal[] GetOptimalParameters(
             decimal[] initialParameterValues,
             Delegate function,
-            ILossFunctionCompiler lossFunctionCompiler,
             decimal[][] data,
             int epochs,
             decimal learningRate,
             bool verbal = false)
         {
-            var lossFunction = lossFunctionCompiler.CompileLossFunction(function);
+            decimal[] parameters = new decimal[initialParameterValues.Length];
+            initialParameterValues.CopyTo(parameters, 0);
 
-            Delegate[] derivativeDelegates = new Delegate[initialParameterValues.Length];
+            Delegate[] derivativeDelegates = new Delegate[parameters.Length];
 
-            for(int i = 0; i < initialParameterValues.Length; i++)
+            for(int i = 0; i < parameters.Length; i++)
             {
-                derivativeDelegates[i] = GetDerivativeDelegate(lossFunction, i);
+                derivativeDelegates[i] = GetDerivativeDelegate(function, i);
             }
 
             for(int t=0;t<epochs;t++)
             {
-                var partialDerivativesValues = new decimal[initialParameterValues.Length];
+                var partialDerivativesValues = new decimal[parameters.Length];
                 for(int i = 0; i < partialDerivativesValues.Length; i++)
                 {
-                    partialDerivativesValues[i] = CalculatePartialDerivative(derivativeDelegates[i], data, initialParameterValues);
+                    partialDerivativesValues[i] = CalculatePartialDerivative(derivativeDelegates[i], data, parameters);
                 }
                 for (int i = 0; i < partialDerivativesValues.Length; i++)
                 {
-                    initialParameterValues[i] -= partialDerivativesValues[i]*learningRate;
+                    parameters[i] -= partialDerivativesValues[i]*learningRate;
                 }
-                if (t % 1000 == 0&&verbal)
+
+                if (t % 10000 == 0&&verbal)
                 {
-                    Console.WriteLine($"Epoch is {t}.\n\t Loss func value:{GetLossFunctionValue(lossFunction.Compile(), data, initialParameterValues)}");
+                    Console.WriteLine($"Epoch is {t}.\n\t Loss func value:{CalculatePartialDerivative(function, data, parameters)}");
                 }
             }
 
-            return initialParameterValues;
+            return parameters;
         }
 
         private static decimal CalculatePartialDerivative(Delegate lossFunction, decimal[][] data, decimal[] parameters)
@@ -73,60 +73,35 @@ namespace GradientDescent
 
             return values;
         }
-        public static Delegate GetDerivativeDelegate(LambdaExpression func, int targetIndex)
+        public static Delegate GetDerivativeDelegate(Delegate func, int targetIndex)
         {
-            if (func.Parameters.Any(p => p.Type != typeof(decimal))) throw new Exception("Not all parameters are decimals");
-            if (func.Parameters.Count<= targetIndex||targetIndex<0) throw new Exception("Index out of dounds");
+            if (func.Method.GetParameters().Length<= targetIndex||targetIndex<0) throw new Exception("Index out of dounds");
 
             List<Expression> adjustedParameters = new List<Expression>();
             List<ParameterExpression> originalParameters = new List<ParameterExpression>();
             ConstantExpression epsilonConstant = Expression.Constant(1e-20m);
 
-            var delegateParams = func.Parameters;
-            for (int i = 0; i < delegateParams.Count; i++)
+            var delegateParams = func.Method.GetParameters();
+            for (int i = 0; i < delegateParams.Length; i++)
             {
+                if (delegateParams[i].ParameterType != typeof(decimal)) continue;
+                var param = Expression.Parameter(typeof(decimal), $"x{i}");
                 if (targetIndex == i)
                 {
-
-                    adjustedParameters.Add(Expression.Add(delegateParams[i], epsilonConstant));
+                    adjustedParameters.Add(Expression.Add(param, epsilonConstant));
                 }
-                else adjustedParameters.Add(delegateParams[i]);
-                originalParameters.Add(delegateParams[i]);
+                else adjustedParameters.Add(param);
+                originalParameters.Add(param);
             }
 
-            var body = Expression.Divide(
+            BinaryExpression body = Expression.Divide(
                 Expression.Subtract(
-                    Expression.Invoke(func, adjustedParameters.ToArray()),
-                    Expression.Invoke(func, originalParameters.ToArray())
+                    Expression.Call(Expression.Constant(func.Target), func.Method, adjustedParameters.ToArray()),
+                    Expression.Call(Expression.Constant(func.Target), func.Method, originalParameters.ToArray())
                 ),
                 epsilonConstant);
 
-            var tmp = Expression.Lambda(body, originalParameters);
-
-            return tmp.Compile();
-        }
-        private decimal GetLossFunctionValue(Delegate loss, decimal[][] data, decimal[] parameters)
-        {
-            decimal values = 0m;
-            for (int i = 0; i < data.Length; i++)
-            {
-                List<object> variables = new List<object>();
-
-
-                foreach (var param in parameters)
-                {
-                    variables.Add((object)param);
-                }
-
-                foreach (var param in data[i])
-                {
-                    variables.Add((object)param);
-                }
-
-                values += (decimal)loss.DynamicInvoke(variables.ToArray());
-            }
-
-            return values;
+            return Expression.Lambda(body, originalParameters).Compile();
         }
     }
 
